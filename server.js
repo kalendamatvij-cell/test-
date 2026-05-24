@@ -11,14 +11,21 @@ const PORT = 2312;
 
 // HTTP сервер — роздає index.html
 const httpServer = http.createServer((req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', '*');
+
   if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
+    // Шукаємо index.html поряд з server.js
     const filePath = path.join(__dirname, 'index.html');
+    console.log(`[HTTP] Запит сторінки, шукаю: ${filePath}`);
     fs.readFile(filePath, (err, data) => {
       if (err) {
-        res.writeHead(404);
-        res.end('index.html not found');
+        console.error(`[HTTP] Файл не знайдено: ${filePath}`);
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(`<h2>Помилка: index.html не знайдено</h2><p>Поклади index.html поряд з server.js у папці:<br><code>${__dirname}</code></p>`);
         return;
       }
+      console.log(`[HTTP] Відправляю index.html (${data.length} байт)`);
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(data);
     });
@@ -146,7 +153,7 @@ wss.on('connection', (ws, req) => {
   sendOnlineCount();
 });
 
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🚀 АнонЧат сервер запущено`);
   console.log(`   HTTP: http://172.16.82.29:${PORT}`);
   console.log(`   WS:   ws://172.16.82.29:${PORT}`);
